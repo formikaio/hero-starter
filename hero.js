@@ -68,17 +68,49 @@
 //   }
 // };
 
-// // The "Careful Assassin"
-// // This hero will attempt to kill the closest weaker enemy hero.
-// var move = function(gameData, helpers) {
-//   var myHero = gameData.activeHero;
-//   if (myHero.health < 50) {
-//     return helpers.findNearestHealthWell(gameData);
-//   } else {
-//     return helpers.findNearestWeakerEnemy(gameData);
-//   }
-// };
+// The "Careful Assassin"
+// This hero will attempt to kill the closest weaker enemy hero.
+/*
+var move = function(gameData, helpers) {
+  var myHero = gameData.activeHero;
+  if (myHero.health < 50) {
+    return helpers.findNearestHealthWell(gameData);
+  } else {
+    return helpers.findNearestWeakerEnemy(gameData);
+  }
+};
+*/
 
+var move = function(gameData, helpers) {
+  var myHero = gameData.activeHero;
+  var directions = ['North', 'East', 'South', 'West'];
+  // TODO RANDOM POSSIBLE DIRECTION
+  var random_direction = directions[Math.floor(Math.random()*4)];
+
+  if (myHero.health < 60) {
+    direction = helpers.findNearestHealthWell(gameData)
+    //console.log("findNearestHealthWell: "+direction);
+    
+    // TODO IF NEAREST WEAKER ENEMY IS ADJACENT AND CAN BE SAFELY KILLED, DO IT
+    
+    if (typeof direction === "undefined") {
+      direction = random_direction;
+    }
+    return direction;
+  } else {
+    var direction = helpers.findNearestWeakerEnemy(gameData);
+    //console.log("findNearestWeakerEnemy: "+direction);
+
+    // TODO ROB  ADJACENT GRAVE   IF NEAREST ENEMY IS NOT ADJACENT
+    // TODO TAKE ADJACENT DIAMOND IF NEAREST ENEMY IS NOT ADJACENT AND HEALTH > 70
+    if (typeof direction === "undefined") {
+      direction = random_direction;
+    }
+    return direction;
+  }
+};
+
+/*
 // // The "Safe Diamond Miner"
 var move = function(gameData, helpers) {
   var myHero = gameData.activeHero;
@@ -104,6 +136,7 @@ var move = function(gameData, helpers) {
     return helpers.findNearestNonTeamDiamondMine(gameData);
   }
 };
+*/
 
 // // The "Selfish Diamond Miner"
 // // This hero will attempt to capture diamond mines (even those owned by teammates).
