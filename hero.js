@@ -166,9 +166,10 @@ var move = function(gameData, helpers) {
     //console.log("findNearestWeakerEnemy: "+direction);
     
     // IF NO WEAKER ENEMY IS PRESENT, LOOK FOR EVERY ENEMY
-    direction = helpers.findNearestEnemy(gameData); 
-    console.log("IF NO WEAKER ENEMY IS PRESENT, LOOK FOR EVERY ENEMY!! " + direction);
-    
+    if (typeof direction === "undefined") {
+      direction = helpers.findNearestEnemy(gameData); 
+      console.log("IF NO WEAKER ENEMY IS PRESENT, LOOK FOR EVERY ENEMY!! " + direction);
+    }
     // TODO IF NO ACCESSIBLE ENEMY DO SOMETHING
 
     
