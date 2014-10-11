@@ -87,27 +87,107 @@ var move = function(gameData, helpers) {
   // TODO RANDOM POSSIBLE DIRECTION
   var random_direction = directions[Math.floor(Math.random()*4)];
 
-  if (myHero.health < 60) {
+  var adjacent_cells = new Array();
+  adjacent_cells['North'] = helpers.getTileNearby(gameData.board, myHero.distanceFromTop, myHero.distanceFromLeft, 'North');
+  adjacent_cells['East']  = helpers.getTileNearby(gameData.board, myHero.distanceFromTop, myHero.distanceFromLeft, 'East');
+  adjacent_cells['South'] = helpers.getTileNearby(gameData.board, myHero.distanceFromTop, myHero.distanceFromLeft, 'South');
+  adjacent_cells['West']  = helpers.getTileNearby(gameData.board, myHero.distanceFromTop, myHero.distanceFromLeft, 'West');
+  
+  var is_nonTeamDiamondMine = function (direction) {
+    return (
+      adjacent_cells[direction].type == 'DiamondMine' 
+      && (
+        typeof adjacent_cells[direction].owner === 'undefined' 
+        || adjacent_cells[direction].owner.team !== myHero.team
+      )
+    );
+  }
+  
+  var is_adjacent = function (cellType) {
+    if (cellType == 'NonTeamDiamondMine') {
+      cellType = 'DiamondMine';
+      return (
+           is_nonTeamDiamondMine('North')
+        || is_nonTeamDiamondMine('East')
+        || is_nonTeamDiamondMine('South')
+        || is_nonTeamDiamondMine('West')
+      );
+    }
+    return (
+         (adjacent_cells['North'].type == cellType)
+      || (adjacent_cells['East'].type == cellType)
+      || (adjacent_cells['South'].type == cellType)
+      || (adjacent_cells['West'].type == cellType)
+    );
+  }
+  var adjacent_direction_for_type = function (cellType) {
+    if (cellType == 'NonTeamDiamondMine') {
+      cellType = 'DiamondMine';
+      if        (is_nonTeamDiamondMine('North')) {
+        return 'North';
+      } else if (is_nonTeamDiamondMine('East')) {
+        return 'East';
+      } else if (is_nonTeamDiamondMine('South')) {
+        return 'South';
+      } else if (is_nonTeamDiamondMine('West')) {
+        return 'West';
+      } else {
+        return undefined;
+      }
+    }
+
+    if (adjacent_cells['North'].type == cellType) {
+      return 'North';
+    } else if (adjacent_cells['East'].type == cellType) {
+      return 'East';
+    } else if (adjacent_cells['South'].type == cellType) {
+      return 'South';
+    } else if (adjacent_cells['West'].type == cellType) {
+      return 'West';
+    } else {
+      return undefined;
+    }
+  }
+  //console.log('Adjacent HealthWell: ' + (is_adjacent('HealthWell') ? 'yes': 'no') );
+  //console.log('Adjacent Hero: '       + (is_adjacent('Hero')       ? 'yes': 'no') );
+  //console.log(adjacent_cells['North'].type);
+
+  var direction = undefined;
+
+  if (myHero.health < 70) {
     direction = helpers.findNearestHealthWell(gameData)
     //console.log("findNearestHealthWell: "+direction);
     
-    // TODO IF NEAREST WEAKER ENEMY IS ADJACENT AND CAN BE SAFELY KILLED, DO IT
+    // TODO STAY HUNGRY: IF NEAREST WEAKER ENEMY IS ADJACENT AND CAN BE SAFELY KILLED, DO IT
+    // TODO STAY SAFE: IF THERE'S A STRONGER ENEMY BETWEEN ME AND THE WELL, LOOK FOR ANOTHER WELL
     
-    if (typeof direction === "undefined") {
-      direction = random_direction;
-    }
-    return direction;
   } else {
-    var direction = helpers.findNearestWeakerEnemy(gameData);
+    direction = helpers.findNearestWeakerEnemy(gameData);
     //console.log("findNearestWeakerEnemy: "+direction);
+    
+    // IF NO WEAKER ENEMY IS PRESENT, LOOK FOR EVERY ENEMY
+    direction = helpers.findNearestEnemy(gameData); 
+    console.log("IF NO WEAKER ENEMY IS PRESENT, LOOK FOR EVERY ENEMY!! " + direction);
+    
+    // TODO IF NO ACCESSIBLE ENEMY DO SOMETHING
 
-    // TODO ROB  ADJACENT GRAVE   IF NEAREST ENEMY IS NOT ADJACENT
-    // TODO TAKE ADJACENT DIAMOND IF NEAREST ENEMY IS NOT ADJACENT AND HEALTH > 70
-    if (typeof direction === "undefined") {
-      direction = random_direction;
-    }
-    return direction;
+    
+    // TAKE ADJACENT NONTEAM DIAMONDMINE IF HEALTHY AND NOBODY AROUND
+    if (myHero.health > 80 && is_adjacent('NonTeamDiamondMine') && !is_adjacent('Hero')) {
+      direction = adjacent_direction_for_type('NonTeamDiamondMine');
+      console.log("TAKE ADJACENT NONTEAM DIAMONDMINE IF HEALTHY AND NOBODY AROUND!! " + direction);
+    } 
+    // USE ADJACENT WELL IF NOT FULLY HEALTHY
+    if (myHero.health < 80 && is_adjacent('HealthWell')) {
+      direction = adjacent_direction_for_type('HealthWell');
+      console.log("USE ADJACENT WELL IF NOT FULLY HEALTHY!! " + direction);
+    } 
   }
+  if (typeof direction === "undefined") {
+    direction = random_direction;
+    console.log("INVALID DIRECTION, GO RANDOM!! " + direction);
+  }
+  return direction;
 };
 
 /*
